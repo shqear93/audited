@@ -16,7 +16,7 @@ module Audited
   module Auditor # :nodoc:
     extend ActiveSupport::Concern
 
-    CALLBACKS = [:audit_create, :audit_update, :audit_destroy]
+    CALLBACKS = [:audit_show, :audit_create, :audit_update, :audit_destroy]
 
     module ClassMethods
       # == Configuration options
@@ -67,6 +67,7 @@ module Audited
 
         class_attribute :audit_associated_with, instance_writer: false
         class_attribute :audited_options, instance_writer: false
+        class_attribute :auditing_show_enabled, instance_writer: true, default: false
         attr_accessor :audit_version, :audit_comment
 
         self.audited_options = options
@@ -86,6 +87,7 @@ module Audited
         before_update :audit_update if audited_options[:on].include?(:update)
         after_touch :audit_touch if audited_options[:on].include?(:touch) && ::ActiveRecord::VERSION::MAJOR >= 6
         before_destroy :audit_destroy if audited_options[:on].include?(:destroy)
+        after_find :audit_show, if: -> { self.class.auditing_show_enabled }
 
         # Define and set after_audit and around_audit callbacks. This might be useful if you want
         # to notify a party after the audit has been created or if you want to access the newly-created
@@ -353,6 +355,10 @@ module Audited
         end
       end
 
+      def audit_show
+        write_audit(action: "show", comment: audit_comment, additional_data: additional_data)
+      end
+
       def write_audit(attrs)
         self.audit_comment = nil
 
@@ -450,6 +456,20 @@ module Audited
         enable_auditing if auditing_was_enabled
       end
 
+      # Executes the block with 'show' auditing enabled.
+      #
+      #   Foo.with_show_auditing do
+      #     Foo.last
+      #   end
+      #
+      def with_show_auditing
+        auditing_was_enabled = auditing_show_enabled
+        enable_show_auditing
+        yield
+      ensure
+        disable_show_auditing unless auditing_was_enabled
+      end
+
       # Executes the block with auditing enabled.
       #
       #   Foo.with_auditing do
@@ -468,8 +488,16 @@ module Audited
         self.auditing_enabled = false
       end
 
+      def disable_show_auditing
+        self.auditing_show_enabled = false
+      end
+
       def enable_auditing
         self.auditing_enabled = true
+      end
+
+      def enable_show_auditing
+        self.auditing_show_enabled = true
       end
 
       # All audit operations during the block are recorded as being
@@ -496,7 +524,7 @@ module Audited
 
       def normalize_audited_options
         audited_options[:on] = Array.wrap(audited_options[:on])
-        audited_options[:on] = [:create, :update, :touch, :destroy] if audited_options[:on].empty?
+        audited_options[:on] = [:show, :create, :update, :touch, :destroy] if audited_options[:on].empty?
         audited_options[:only] = Array.wrap(audited_options[:only]).map(&:to_s)
         audited_options[:except] = Array.wrap(audited_options[:except]).map(&:to_s)
         max_audits = audited_options[:max_audits] || Audited.max_audits

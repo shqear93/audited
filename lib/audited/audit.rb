@@ -56,6 +56,7 @@ module Audited
     scope :creates, -> { where(action: "create") }
     scope :updates, -> { where(action: "update") }
     scope :destroys, -> { where(action: "destroy") }
+    scope :shows, -> { where(action: "show") }
 
     scope :up_until, ->(date_or_time) { where("created_at <= ?", date_or_time) }
     scope :from_version, ->(version) { where("version >= ?", version) }
@@ -101,6 +102,8 @@ module Audited
       when "update"
         # changes back attributes
         auditable.update!(audited_changes.transform_values(&:first))
+      when "show"
+        # do nothing
       else
         raise StandardError, "invalid action given #{action}"
       end
