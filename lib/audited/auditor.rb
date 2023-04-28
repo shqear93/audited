@@ -68,6 +68,7 @@ module Audited
         class_attribute :audit_associated_with, instance_writer: false
         class_attribute :audited_options, instance_writer: false
         class_attribute :auditing_show_enabled, instance_writer: true, default: false
+        class_attribute :additional_data, instance_writer: true, default: {}
         attr_accessor :audit_version, :audit_comment
 
         self.audited_options = options
@@ -330,28 +331,34 @@ module Audited
       end
 
       def audit_create
-        write_audit(action: "create", audited_changes: audited_attributes,
-          comment: audit_comment)
+        write_audit(
+          action:  "create", audited_changes: audited_attributes,
+          comment: audit_comment, additional_data: additional_data
+        )
       end
 
       def audit_update
         unless (changes = audited_changes).empty? && (audit_comment.blank? || audited_options[:update_with_comment_only] == false)
-          write_audit(action: "update", audited_changes: changes,
-            comment: audit_comment)
+          write_audit(
+            action:  "update", audited_changes: changes,
+            comment: audit_comment, additional_data: additional_data
+          )
         end
       end
 
       def audit_touch
         unless (changes = audited_changes(for_touch: true)).empty?
-          write_audit(action: "update", audited_changes: changes,
-            comment: audit_comment)
+          write_audit(
+            action:  "update", audited_changes: changes,
+            comment: audit_comment, additional_data: additional_data
+          )
         end
       end
 
       def audit_destroy
         unless new_record?
-          write_audit(action: "destroy", audited_changes: audited_attributes,
-            comment: audit_comment)
+          write_audit(action:  "destroy", audited_changes: audited_attributes,
+                      comment: audit_comment, additional_data: additional_data)
         end
       end
 
@@ -482,6 +489,10 @@ module Audited
         yield
       ensure
         disable_auditing unless auditing_was_enabled
+      end
+
+      def set_additional_data(**additional)
+        self.additional_data = additional
       end
 
       def disable_auditing

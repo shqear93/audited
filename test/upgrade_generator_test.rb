@@ -85,6 +85,16 @@ class UpgradeGeneratorTest < Rails::Generators::TestCase
     end
   end
 
+  test "should add 'additional_data' to audits table" do
+    load_schema 7
+
+    run_generator %w[upgrade]
+
+    assert_migration "db/migrate/add_additional_data_to_audits_table.rb" do |content|
+      assert_match(/add_column :audits, :additional_data, :jsonb/, content)
+    end
+  end
+
   test "generate migration with correct AR migration parent" do
     load_schema 1
 
