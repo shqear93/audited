@@ -118,9 +118,14 @@ module Audited
     def user_as_string=(user)
       # reset both either way
       self.user_as_model = self.username = nil
-      user.is_a?(::ActiveRecord::Base) ?
-        self.user_as_model = user :
+      case
+      when user.is_a?(::ActiveRecord::Base)
+        self.user_as_model = user
+      when user.kind_of?(::ActiveModel::Model)
+        assign_attributes(user.as_audited_model)
+      else
         self.username = user
+      end
     end
     alias_method :user_as_model=, :user=
     alias_method :user=, :user_as_string=
