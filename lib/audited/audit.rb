@@ -57,6 +57,10 @@ module Audited
     scope :updates, -> { where(action: "update") }
     scope :destroys, -> { where(action: "destroy") }
     scope :shows, -> { where(action: "show") }
+    scope :not_creates, -> { where.not(action: "create") }
+    scope :not_updates, -> { where.not(action: "update") }
+    scope :not_destroys, -> { where.not(action: "destroy") }
+    scope :not_shows, -> { where.not(action: "show") }
 
     scope :up_until, ->(date_or_time) { where("created_at <= ?", date_or_time) }
     scope :from_version, ->(version) { where("version >= ?", version) }
