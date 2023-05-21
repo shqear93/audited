@@ -106,10 +106,8 @@ module Audited
       when "update"
         # changes back attributes
         auditable.update!(audited_changes.transform_values(&:first))
-      when "show"
-        # do nothing
       else
-        raise StandardError, "invalid action given #{action}"
+        raise StandardError, "#{action} action rollback unsupported"
       end
     end
 
