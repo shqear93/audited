@@ -162,9 +162,11 @@ module Audited
       # Get a specific revision specified by the version number, or +:previous+
       # Returns nil for versions greater than revisions count
       def revision(version)
-        if version == :previous || audits.last.version >= version
-          revision_with Audited.audit_class.reconstruct_attributes(audits_to(version))
-        end
+        revision = if version == :previous || audits.last.version >= version
+                     revision_with Audited.audit_class.reconstruct_attributes(audits_to(version))
+                   end
+        audit_show(version: version) if self.auditing_show_enabled
+        revision
       end
 
       # Find the oldest revision recorded prior to the date/time provided.
@@ -362,8 +364,10 @@ module Audited
         end
       end
 
-      def audit_show
-        write_audit(action: "show", comment: audit_comment, additional_data: additional_data)
+      def audit_show(version: nil)
+        options = { action: "show", version: version, additional_data: additional_data }
+        options[:version] = version if version.present?
+        write_audit(**options)
       end
 
       def write_audit(attrs)
