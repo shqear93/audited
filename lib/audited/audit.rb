@@ -181,6 +181,8 @@ module Audited
     private
 
     def set_version_number
+      return if self.version.present?
+
       if action == "create"
         self.version = 1
       else
