@@ -366,7 +366,7 @@ module Audited
       end
 
       def audit_show(version: nil)
-        options = { action: "show", custom_version: version, additional_data: additional_data }
+        options = { action: "show", additional_data: additional_data }
         options[:version] = version if version.present?
         write_audit(**options)
       end
