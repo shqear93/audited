@@ -69,7 +69,8 @@ module Audited
         class_attribute :audited_options, instance_writer: false
         class_attribute :auditing_show_enabled, instance_writer: true, default: false
         class_attribute :additional_data, instance_writer: true, default: {}
-        attr_accessor :audit_version, :audit_comment
+        attr_accessor :audit_comment
+        attr_writer :audit_version
 
         self.audited_options = options
         normalize_audited_options
@@ -107,6 +108,12 @@ module Audited
 
     module AuditedInstanceMethods
       REDACTED = "[REDACTED]"
+
+      def audit_version
+        return @audit_version if @audit_version.present?
+
+        @audit_version ||= audits.select(:version).last.version
+      end
 
       # Temporarily turns off auditing while saving.
       def save_without_auditing
