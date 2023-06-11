@@ -18,6 +18,9 @@ module Audited
 
     CALLBACKS = [:audit_show, :audit_create, :audit_update, :audit_destroy]
 
+    AUDITABLE_ACTIONS = [:create, :update]
+    LOG_ACTIONS = [:show]
+
     module ClassMethods
       # == Configuration options
       #

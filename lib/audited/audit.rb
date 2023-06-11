@@ -112,6 +112,11 @@ module Audited
       end
     end
 
+    # Checks if the action was modifying or not
+    def auditable_action?
+      Audited.audit_class::AUDITABLE_ACTIONS.include? action.to_sym
+    end
+
     # Allows user to be set to either a string or an ActiveRecord object
     # @private
     def user_as_string=(user)
@@ -184,13 +189,15 @@ module Audited
     def set_version_number
       return if self.version.present?
 
-      if action == "create"
-        self.version = 1
-      else
-        collection = (ActiveRecord::VERSION::MAJOR >= 6) ? self.class.unscoped : self.class
-        max = collection.auditable_finder(auditable_id, auditable_type).maximum(:version) || 0
-        self.version = max + 1
-      end
+      return self.version = 1 if action == "create"
+
+      collection   = (ActiveRecord::VERSION::MAJOR >= 6) ? self.class.unscoped : self.class
+      max          = collection.auditable_finder(auditable_id, auditable_type).maximum(:version) || 0
+      self.version = max + (should_increment_version? ? 1 : 0)
+    end
+
+    def should_increment_version?
+      auditable_action?
     end
 
     def set_audit_user
