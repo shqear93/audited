@@ -163,7 +163,7 @@ module Audited
 
         targeted_audits.map do |audit|
           previous_attributes.merge!(audit.new_attributes)
-          revision_with(previous_attributes.merge!(version: audit.version))
+          revision_with(previous_attributes.merge!(audit_version: audit.version))
         end
       end
 
@@ -382,11 +382,12 @@ module Audited
         if auditing_enabled
           attrs[:associated] = send(audit_associated_with) unless audit_associated_with.nil?
 
-          run_callbacks(:audit) {
+          run_callbacks(:audit) do
             audit = audits.create(attrs)
             combine_audits_if_needed if attrs[:action] != "create"
+            self.audit_version = audit.version
             audit
-          }
+          end
         end
       end
 
