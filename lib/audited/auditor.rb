@@ -112,10 +112,15 @@ module Audited
     module AuditedInstanceMethods
       REDACTED = "[REDACTED]"
 
+      def reload
+        self.audit_version = nil
+        super
+      end
+
       def audit_version
         return @audit_version if @audit_version.present?
 
-        @audit_version ||= audits.select(:version).last.version
+        @audit_version ||= audits.select(:version).last&.version
       end
 
       # Temporarily turns off auditing while saving.
