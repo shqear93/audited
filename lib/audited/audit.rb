@@ -108,7 +108,7 @@ module Audited
         # changes back attributes
         auditable.update!(audited_changes.transform_values(&:first))
       else
-        raise StandardError, "#{action} action rollback unsupported"
+        raise StandardError, "#{action} action rollback is not supported"
       end
     end
 
