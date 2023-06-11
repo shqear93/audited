@@ -146,7 +146,7 @@ module Audited
       #   end
       #
       def revisions(from_version = 1)
-        audits = self.audits.creates.or(self.audits.updates)
+        audits = self.audits.modifies
         return [] unless audits.from_version(from_version).exists?
 
         all_audits = audits.select([:audited_changes, :version, :action]).to_a

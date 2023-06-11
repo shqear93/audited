@@ -55,6 +55,7 @@ module Audited
     scope :descending, -> { reorder(version: :desc) }
     scope :creates, -> { where(action: "create") }
     scope :updates, -> { where(action: "update") }
+    scope :modifies, -> { creates.or(updates) }
     scope :destroys, -> { where(action: "destroy") }
     scope :shows, -> { where(action: "show") }
     scope :not_creates, -> { where.not(action: "create") }
